@@ -2,10 +2,8 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
-
 void main() => runApp(const WeatherApp());
-
-// Your API key (you already provided one). For production don't hardcode keys.
+// Replace with your OpenWeatherMap API key
 const String apiKey = 'fa21b33a0b5c7f7128b0d9fd1dfaadaf';
 const String apiBase = 'https://api.openweathermap.org/data/2.5/weather';
 
@@ -14,7 +12,7 @@ class WeatherApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Weather Rajushiv',
+      title: 'Weather App',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(primarySwatch: Colors.blue),
       home: const WeatherHome(),
@@ -71,125 +69,6 @@ class _WeatherHomeState extends State<WeatherHome> {
     }
   }
 
-  String _getBackgroundForWeather(String description) {
-    final desc = description.toLowerCase();
-    if (desc.contains('cloud')) return 'assets/images/cloudy.png';
-    if (desc.contains('rain') || desc.contains('drizzle') || desc.contains('shower')) return 'assets/images/rainy.png';
-    if (desc.contains('snow')) return 'assets/images/snowy.png';
-    // default / sunny
-    return 'assets/images/sunny.png';
-  }
-
-  Color _getThemeColor(String description) {
-    final desc = description.toLowerCase();
-    if (desc.contains('cloud')) return Colors.grey.shade700;
-    if (desc.contains('rain') || desc.contains('drizzle') || desc.contains('shower')) return Colors.indigo;
-    if (desc.contains('snow')) return Colors.lightBlue.shade200;
-    // default sunny/warm
-    return Colors.orange.shade600;
-  }
-
-  Widget _buildBody() {
-    if (_loading) return const Center(child: CircularProgressIndicator());
-    if (_error != null) return Center(child: Text(_error!, style: const TextStyle(color: Colors.red)));
-
-    if (_result == null) {
-      return const Center(child: Text('Search a city to see weather'));
-    }
-
-    final w = _result!;
-    final updated = DateFormat.yMMMd().add_jm().format(DateTime.fromMillisecondsSinceEpoch(w.dt * 1000));
-    final bg = _getBackgroundForWeather(w.description);
-    final cardColor = _getThemeColor(w.description);
-
-    // Use a Stack so background image is underneath translucent content
-    return RefreshIndicator(
-      onRefresh: () async => _fetchWeather(_cityController.text),
-      child: Stack(
-        children: [
-          // Background image with fallback to gradient/solid color
-          Positioned.fill(
-            child: Image.asset(
-              bg,
-              fit: BoxFit.cover,
-              errorBuilder: (_, __, ___) {
-                // fallback gradient container if asset missing
-                return Container(
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [Colors.blue.shade300, Colors.blue.shade900],
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                    ),
-                  ),
-                );
-              },
-            ),
-          ),
-
-          // Content with a translucent background for readability
-          ListView(
-            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 24),
-            children: [
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Colors.black.withOpacity(0.25),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Column(
-                  children: [
-                    Text(w.name, style: const TextStyle(fontSize: 32, fontWeight: FontWeight.w600, color: Colors.white)),
-                    const SizedBox(height: 6),
-                    Text(w.country, style: const TextStyle(fontSize: 16, color: Colors.white70)),
-                  ],
-                ),
-              ),
-
-              const SizedBox(height: 20),
-
-              Center(
-                child: Image.network(
-                  w.iconUrl,
-                  width: 120,
-                  height: 120,
-                  errorBuilder: (_, __, ___) => const Icon(Icons.cloud, size: 96, color: Colors.white),
-                ),
-              ),
-
-              const SizedBox(height: 10),
-              Center(child: Text('${w.temp.toStringAsFixed(1)}°C', style: const TextStyle(fontSize: 40, fontWeight: FontWeight.bold, color: Colors.white))),
-              const SizedBox(height: 6),
-              Center(child: Text(w.description, style: const TextStyle(fontSize: 18, fontStyle: FontStyle.italic, color: Colors.white70))),
-              const SizedBox(height: 18),
-
-              // Card using theme color based on weather
-              Card(
-                color: cardColor.withOpacity(0.92),
-                elevation: 2,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                child: Padding(
-                  padding: const EdgeInsets.all(14),
-                  child: Column(
-                    children: [
-                      Row(children: [const Icon(Icons.thermostat_outlined), const SizedBox(width: 10), Text('Feels like: ${w.feelsLike.toStringAsFixed(1)}°C')]),
-                      const SizedBox(height: 10),
-                      Row(children: [const Icon(Icons.water_drop_outlined), const SizedBox(width: 10), Text('Humidity: ${w.humidity}%')]),
-                      const SizedBox(height: 10),
-                      Row(children: [const Icon(Icons.air), const SizedBox(width: 10), Text('Wind: ${w.windSpeed} m/s')]),
-                      const SizedBox(height: 10),
-                      Row(children: [const Icon(Icons.access_time), const SizedBox(width: 10), Text('Updated: $updated')]),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
   void _onSearchPressed() {
     final city = _cityController.text.trim();
     if (city.isEmpty) {
@@ -204,13 +83,13 @@ class _WeatherHomeState extends State<WeatherHome> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Weather Rajushiv'),
+        title: const Text('Weather App'),
         centerTitle: true,
       ),
       body: Column(
         children: [
           Padding(
-            padding: const EdgeInsets.fromLTRB(14, 12, 14, 6),
+            padding: const EdgeInsets.all(12),
             child: Row(
               children: [
                 Expanded(
@@ -227,12 +106,49 @@ class _WeatherHomeState extends State<WeatherHome> {
                 const SizedBox(width: 8),
                 ElevatedButton(
                   onPressed: _onSearchPressed,
-                  child: const Text('aage'),
+                  child: const Text('Search'),
                 ),
               ],
             ),
           ),
-          Expanded(child: _buildBody()),
+          Expanded(
+            child: _loading
+                ? const Center(child: CircularProgressIndicator())
+                : _error != null
+                ? Center(child: Text(_error!, style: const TextStyle(color: Colors.red)))
+                : _result == null
+                ? const Center(child: Text('Search a city to see weather'))
+                : _buildWeatherInfo(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildWeatherInfo() {
+    final w = _result!;
+    final updated = DateFormat.yMMMd().add_jm().format(DateTime.fromMillisecondsSinceEpoch(w.dt * 1000));
+
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text('${w.name}, ${w.country}', style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 12),
+          Image.network(
+            w.iconUrl,
+            width: 100,
+            height: 100,
+            errorBuilder: (_, __, ___) => const Icon(Icons.cloud, size: 80),
+          ),
+          const SizedBox(height: 12),
+          Text('${w.temp.toStringAsFixed(1)}°C', style: const TextStyle(fontSize: 36, fontWeight: FontWeight.bold)),
+          Text(w.description, style: const TextStyle(fontSize: 18, fontStyle: FontStyle.italic)),
+          const SizedBox(height: 12),
+          Text('Feels like: ${w.feelsLike.toStringAsFixed(1)}°C'),
+          Text('Humidity: ${w.humidity}%'),
+          Text('Wind: ${w.windSpeed} m/s'),
+          Text('Updated: $updated'),
         ],
       ),
     );
